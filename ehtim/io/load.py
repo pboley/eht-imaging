@@ -31,6 +31,7 @@ import copy
 import sys
 import time as ttime
 import h5py
+import oifits
 
 import ehtim.obsdata
 import ehtim.image
@@ -39,7 +40,6 @@ import ehtim.movie
 import ehtim.vex
 import ehtim.observing
 
-import ehtim.io.oifits
 import ehtim.const_def as ehc
 
 import warnings
@@ -1462,7 +1462,7 @@ def load_obs_oifits(filename, flux=1.0):
     print('Warning: load_obs_oifits does NOT currently support polarimetric data!')
 
     # open oifits file and get visibilities
-    oidata = ehtim.io.oifits.open(filename)
+    oidata = oifits.open(filename)
     vis_data = oidata.vis
 
     # get source info

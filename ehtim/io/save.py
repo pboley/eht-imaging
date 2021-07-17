@@ -29,7 +29,6 @@ import datetime
 import h5py
 
 import ehtim.io.writeoifits
-import ehtim.io.oifits
 from astropy.time import Time
 
 import ehtim.const_def as ehc
