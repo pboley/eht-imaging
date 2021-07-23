@@ -172,7 +172,6 @@ class Obsdata(object):
         self.tkey = {self.tarr[i]['site']: i for i in range(len(self.tarr))}
         if np.any(self.tarr['sefdr'] != 0) or np.any(self.tarr['sefdl'] != 0):
             self.reorder_tarr_sefd()
-        self.reorder_baselines()
 
         # Get tstart, mjd and tstop
         times = self.unpack(['time'])['time']
@@ -389,7 +388,6 @@ class Obsdata(object):
         sorted_list = sorted(self.tarr, key=lambda x: np.sqrt(x['sefdr']**2 + x['sefdl']**2))
         self.tarr = np.array(sorted_list, dtype=ehc.DTARR)
         self.tkey = {self.tarr[i]['site']: i for i in range(len(self.tarr))}
-        self.reorder_baselines()
 
         return
 
@@ -403,7 +401,6 @@ class Obsdata(object):
         idx = np.argsort(snr_median)[::-1]
         self.tarr = self.tarr[idx]
         self.tkey = {self.tarr[i]['site']: i for i in range(len(self.tarr))}
-        self.reorder_baselines()
 
         return
 
@@ -415,7 +412,6 @@ class Obsdata(object):
         np.random.shuffle(idx)
         self.tarr = self.tarr[idx]
         self.tkey = {self.tarr[i]['site']: i for i in range(len(self.tarr))}
-        self.reorder_baselines()
 
         return
 
