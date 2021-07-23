@@ -1452,6 +1452,10 @@ def load_obs_uvfits(filename, polrep='stokes', flipbl=False, allow_singlepol=Tru
 
 def load_obs_oifits(filename, flux=1.0):
     """Load data from an oifits file. Does NOT currently support polarization.
+       Assumes OI_VIS tables contain visibility amplitude (visamp, visamperr)
+       and full phase (visphi, visphierr), and also that there is a single
+       target and wavelength table. No other OIFITS tables (OI_VIS2, OI_T3, etc)
+       are used.
        Args:
            fname (str): path to input text file
            flux (float): normalization total flux
@@ -1572,6 +1576,108 @@ def load_obs_oifits(filename, flux=1.0):
     # return object
     return ehtim.obsdata.Obsdata(ra, dec, rf, bw, datatable, tarr,
                                  polrep='stokes', source=src, mjd=time[0])
+
+def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
+    """Load data from an oifits file. Does NOT currently support polarization.
+       Args:
+           fname (str): path to input text file
+           flux (float): normalization total flux
+           target (int): ID of OI_TARGET to use
+           usevis2 (bool): use OI_VIS2 for visibility amplitude if True. Otherwise,
+               use OI_VIS (and ignore phase information from OI_VIS).
+       Returns:
+           obs (Obsdata): Obsdata object loaded from file
+    """
+
+    print('Warning: load_obs_oifits does NOT currently support polarimetric data!')
+
+    # open oifits file and get visibilities
+    oidata = oifits.open(filename)
+
+    # get source info
+    src = oidata.target[target].target
+    ra = oidata.target[target].raep0.angle
+    dec = oidata.target[target].decep0.angle
+
+    # check which elements of OI_VIS2 table are for the selected target
+    time = []
+    tint = []
+    t1 = []
+    t2 = []
+    u = []
+    v = []
+    amp = []
+    sigma = []
+    wavelength = []
+    bandpass = []
+    if usevis2:
+        vis_data = oidata.vis2
+    else:
+        vis_data = oidata.vis
+    for vis in vis_data:
+        if vis.target is oidata.target[target]:
+            # Don't use masked elements
+            idx = ~vis.flag
+            nobs = idx.sum()
+            # Follow convention from load_obs_oifits
+            obstime = ttime.mktime((vis.timeobs+datetime.timedelta(days=1)).timetuple()) / 3600.0
+            time += list((obstime,)*nobs)
+            tint += list((vis.int_time,)*nobs)
+            t1 += list((vis.station[0].sta_name,)*nobs)
+            t2 += list((vis.station[1].sta_name,)*nobs)
+            u += list(vis.ucoord / vis.wavelength.eff_wave[idx])
+            v += list(vis.vcoord / vis.wavelength.eff_wave[idx])
+            if usevis2:
+                amp += list(np.sqrt(vis._vis2data[idx]))
+                sigma += list(vis._vis2err[idx]/2/np.sqrt(vis._vis2data[idx]))
+            else:
+                amp += list(vis.visamp[idx])
+                sigma += list(vis.visamperr[idx])
+            # save for later
+            wavelength += list(vis.wavelength.eff_wave[idx])
+            bandpass += list(vis.wavelength.eff_band[idx])
+
+    datatable = np.array([(time[i], tint[i], t1[i], t2[i], u[i], v[i], amp[i],
+                           sigma[i]) for i in range(len(amp))], dtype=ehc.DTAMP)
+
+
+    # get antenna info
+    nAntennas = len(oidata.array[list(oidata.array.keys())[0]].station)
+    sites = np.array([oidata.array[list(oidata.array.keys())[0]
+                                   ].station[i].sta_name for i in range(nAntennas)])
+    arrayX = oidata.array[list(oidata.array.keys())[0]].arrxyz[0]
+    arrayY = oidata.array[list(oidata.array.keys())[0]].arrxyz[1]
+    arrayZ = oidata.array[list(oidata.array.keys())[0]].arrxyz[2]
+    x = np.array([arrayX + oidata.array[list(oidata.array.keys())[0]].station[i].staxyz[0]
+                  for i in range(nAntennas)])
+    y = np.array([arrayY + oidata.array[list(oidata.array.keys())[0]].station[i].staxyz[1]
+                  for i in range(nAntennas)])
+    z = np.array([arrayZ + oidata.array[list(oidata.array.keys())[0]].station[i].staxyz[2]
+                  for i in range(nAntennas)])
+
+    frequency = ehc.C / np.array(wavelength) # Hz, for all measurements
+    bandwidth = frequency**2 / ehc.C * np.array(bandpass) # Hz, for all measurements
+    bw = np.mean(bandwidth)
+    rf = np.mean(frequency)
+
+    # dummy variables
+    sefdr = np.zeros(x.shape)
+    sefdl = np.zeros(x.shape)
+    fr_par = np.zeros(x.shape)
+    fr_el = np.zeros(x.shape)
+    fr_off = np.zeros(x.shape)
+    dr = np.zeros(x.shape) + 1j * np.zeros(x.shape)
+    dl = np.zeros(x.shape) + 1j * np.zeros(x.shape)
+
+    tarr = np.array([(sites[i], x[i], y[i], z[i],
+                      sefdr[i], sefdl[i], dr[i], dl[i],
+                      fr_par[i], fr_el[i], fr_off[i],
+                      ) for i in range(nAntennas)
+                     ], dtype=ehc.DTARR)
+
+    # return object
+    return ehtim.obsdata.Obsdata(ra, dec, rf, bw, datatable, tarr,
+                                 source=src)
 
 
 def load_dtype_txt(obs, filename, dtype='cphase'):

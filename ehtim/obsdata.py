@@ -132,8 +132,8 @@ class Obsdata(object):
 
         if len(datatable) == 0:
             raise Exception("No data in input table!")
-        if not (datatable.dtype in [ehc.DTPOL_STOKES, ehc.DTPOL_CIRC]):
-            raise Exception("Data table dtype should be DTPOL_STOKES or DTPOL_CIRC")
+        if not (datatable.dtype in [ehc.DTPOL_STOKES, ehc.DTPOL_CIRC, ehc.DTAMP]):
+            raise Exception("Data table dtype should be DTPOL_STOKES, DTPOL_CIRC or DTAMP")
 
         # Polarization Representation
         if polrep == 'stokes':
