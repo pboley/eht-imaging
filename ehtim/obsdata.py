@@ -491,7 +491,7 @@ class Obsdata(object):
                 datalist.append(np.array([obs for obs in group]))
         else:
             # Group measurements by scan
-            if ((self.scans is None) or 
+            if ((self.scans is None) or
                  np.any([scan is None for scan in self.scans]) or
                  len(self.scans) == 0):
                 print("No scan table in observation. Adding scan table before gathering...")
@@ -2953,8 +2953,8 @@ class Obsdata(object):
         print("\n")
         return out
 
-    def bispectra_tri(self, site1, site2, site3, 
-                      vtype='vis', timetype=False, snrcut=0., method='from_maxset', 
+    def bispectra_tri(self, site1, site2, site3,
+                      vtype='vis', timetype=False, snrcut=0., method='from_maxset',
                       bs=[], force_recompute=False):
 
         """Return complex bispectrum  over time on a triangle (1-2-3).
@@ -3120,7 +3120,7 @@ class Obsdata(object):
                                          l1['u'], l1['v'],
                                          l2['u'], l2['v'],
                                          l3['u'], l3['v'],
-                                         bi, 
+                                         bi,
                                          bisig),
                                dtype=ehc.DTBIS))
         else:
@@ -3130,7 +3130,7 @@ class Obsdata(object):
         return outdata
 
     def cphase_tri(self, site1, site2, site3, vtype='vis', ang_unit='deg',
-                   timetype=False, snrcut=0., method='from_maxset', 
+                   timetype=False, snrcut=0., method='from_maxset',
                    cphases=[], force_recompute=False):
         """Return closure phase  over time on a triangle (1-2-3).
 
@@ -3167,7 +3167,7 @@ class Obsdata(object):
         # get selected closure phases from the maximal set
         # TODO: verify consistency/performance of from_vis, and delete this method
         if method=='from_maxset':
-                
+
             # Get closure phases (maximal set)
             if ((len(cphases) == 0) and not (self.cphase is None) and not (len(self.cphase) == 0) and
                     not force_recompute):
@@ -3587,7 +3587,7 @@ class Obsdata(object):
         print("\n")
         return out
 
-    def camp_quad(self, site1, site2, site3, site4, 
+    def camp_quad(self, site1, site2, site3, site4,
                   vtype='vis', ctype='camp', debias=True, timetype=False, snrcut=0.,
                   method='from_maxset',
                   camps=[], force_recompute=False):
