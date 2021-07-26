@@ -1640,7 +1640,6 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
     datatable = np.array([(time[i], tint[i], t1[i], t2[i], u[i], v[i], amp[i],
                            sigma[i]) for i in range(len(amp))], dtype=ehc.DTAMP)
 
-
     # get antenna info
     nAntennas = len(oidata.array[list(oidata.array.keys())[0]].station)
     sites = np.array([oidata.array[list(oidata.array.keys())[0]
@@ -1675,9 +1674,47 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
                       ) for i in range(nAntennas)
                      ], dtype=ehc.DTARR)
 
+    # Create object with just visibility amp
+    obs = ehtim.obsdata.Obsdata(ra, dec, rf, bw, datatable, tarr, source=src)
+
+    # Load closure phase
+    t1 = []
+    t2 = []
+    t3 = []
+    u1 = []
+    v1 = []
+    u2 = []
+    v2 = []
+    u3 = []
+    v3 = []
+    cphase = []
+    sigmacp = []
+    for cpdata in oidata.t3:
+        if cpdata.target is oidata.target[target]:
+            idx = ~cpdata.flag
+            nobs = idx.sum()
+            # Follow convention from load_obs_oifits
+            obstime = ttime.mktime((cpdata.timeobs+datetime.timedelta(days=1)).timetuple()) / 3600.0
+            tint += list((cpdata.int_time,)*nobs)
+            t1 += list((cpdata.station[0].sta_name,)*nobs)
+            t2 += list((cpdata.station[1].sta_name,)*nobs)
+            t3 += list((cpdata.station[1].sta_name,)*nobs)
+            u1 += list(cpdata.u1coord / cpdata.wavelength.eff_wave[idx])
+            v1 += list(cpdata.v1coord / cpdata.wavelength.eff_wave[idx])
+            u2 += list(cpdata.u2coord / cpdata.wavelength.eff_wave[idx])
+            v2 += list(cpdata.v2coord / cpdata.wavelength.eff_wave[idx])
+            # u3 = u1 + u2, v3 = v1 + v2
+            u3 += list((cpdata.u1coord+cpdata.u2coord) / cpdata.wavelength.eff_wave[idx])
+            v3 += list((cpdata.v1coord+cpdata.v2coord) / cpdata.wavelength.eff_wave[idx])
+            cphase += list(cpdata.t3phi[idx])
+            sigmacp += list(cpdata.t3phierr[idx])
+
+    obs.cphase = np.array([(time[i], t1[i], t2[i], t3[i], u1[i], v1[i],
+                            u2[i], v2[i], u3[i], v3[i], cphase[i],
+                            sigmacp[i]) for i in range(len(cphase))], dtype=ehc.DTCPHASE)
+
     # return object
-    return ehtim.obsdata.Obsdata(ra, dec, rf, bw, datatable, tarr,
-                                 source=src)
+    return obs
 
 
 def load_dtype_txt(obs, filename, dtype='cphase'):
