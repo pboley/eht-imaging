@@ -115,7 +115,7 @@ class Obsdata(object):
                tarr (numpy.recarray): The array of telescope data with datatype DTARR
                scantable (numpy.recarray): The array of scan information
 
-               polrep (str): polarization representation, either 'stokes' or 'circ'
+               polrep (str): polarization representation, either 'stokes', 'circ' or 'none'
                source (str): The source name
                mjd (int): The integer MJD of the observation
                timetype (str): How to interpret tstart and tstop; either 'GMST' or 'UTC'
@@ -144,8 +144,10 @@ class Obsdata(object):
             self.polrep = 'circ'
             self.poldict = ehc.POLDICT_CIRC
             self.poltype = ehc.DTPOL_CIRC
+        elif polrep == 'none':
+            self.polrep = 'none'
         else:
-            raise Exception("only 'stokes' and 'circ' are supported polreps!")
+            raise Exception("only 'stokes', 'circ' and 'none' are supported polreps!")
 
         # Set the various observation parameters
         self.source = str(source)
@@ -424,11 +426,10 @@ class Obsdata(object):
                (numpy.recarray): a copy of the Obsdata.data table including all conjugate baselines.
         """
 
-        data = np.empty(2 * len(self.data), dtype=self.poltype)
+        data = np.empty(2 * len(self.data), dtype=self.data.dtype)
 
         # Add the conjugate baseline data
-        for f in self.poltype:
-            f = f[0]
+        for f in self.data.dtype.names:
             if f in ['t1', 't2', 'tau1', 'tau2']:
                 if f[-1] == '1':
                     f2 = f[:-1] + '2'
@@ -439,8 +440,8 @@ class Obsdata(object):
             elif f in ['u', 'v']:
                 data[f] = np.hstack((self.data[f], -self.data[f]))
 
-            elif f in [self.poldict['vis1'], self.poldict['vis2'],
-                       self.poldict['vis3'], self.poldict['vis4']]:
+            elif self.polrep != 'none' and f in [self.poldict['vis1'], self.poldict['vis2'],
+                                                 self.poldict['vis3'], self.poldict['vis4']]:
                 if self.polrep == 'stokes':
                     data[f] = np.hstack((self.data[f], np.conj(self.data[f])))
                 elif self.polrep == 'circ':
@@ -706,6 +707,9 @@ class Obsdata(object):
                 elif self.polrep == 'circ':
                     out = 0.5 * (data['rrvis'] + data['llvis'])
                     sig = 0.5 * np.sqrt(data['rrsigma']**2 + data['llsigma']**2)
+                elif self.polrep == 'none':
+                    out = data['amp']
+                    sig = data['sigma']
             elif field in ['qvis', 'qamp', 'qphase', 'qsnr', 'qsigma', 'qsigma_phase']:
                 ty = 'c16'
                 if self.polrep == 'stokes':
