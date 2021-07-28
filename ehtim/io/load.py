@@ -1676,6 +1676,7 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
 
     # Create object with just visibility amp
     obs = ehtim.obsdata.Obsdata(ra, dec, rf, bw, datatable, tarr, polrep='none', source=src)
+    obs.amp = obs.data
 
     # Load closure phase
     t1 = []
