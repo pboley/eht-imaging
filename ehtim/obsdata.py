@@ -1256,6 +1256,9 @@ class Obsdata(object):
 
         """
 
+        # Temporary; for debugging OIFITS imports
+        raise Exception("add_cphase called!")
+
         # Get spacing between datapoints in seconds
         if len(set([x[0] for x in list(self.unpack('time'))])) > 1:
             tint0 = np.min(np.diff(np.asarray(sorted(list(set(
