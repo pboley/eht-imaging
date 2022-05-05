@@ -788,7 +788,7 @@ def chisqgrad_bs(imvec, Amatrices, bis, sigma):
     pt2 = wdiff * np.dot(Amatrices[0], imvec) * np.dot(Amatrices[2], imvec)
     pt3 = wdiff * np.dot(Amatrices[0], imvec) * np.dot(Amatrices[1], imvec)
     out = (np.dot(pt1, Amatrices[0]) +
-           np.dot(pt2, Amatrices[1]) + 
+           np.dot(pt2, Amatrices[1]) +
            np.dot(pt3, Amatrices[2]))
 
     out = -np.real(out) / len(bis)
@@ -938,7 +938,7 @@ def chisqgrad_logcamp(imvec, Amatrices, log_clamp, sigma):
     i3 = np.dot(Amatrices[2], imvec)
     i4 = np.dot(Amatrices[3], imvec)
     log_clamp_samples = (np.log(np.abs(i1)) +
-                         np.log(np.abs(i2)) - 
+                         np.log(np.abs(i2)) -
                          np.log(np.abs(i3)) -
                          np.log(np.abs(i4)))
 
@@ -3933,7 +3933,7 @@ def chisqdata_bs_nfft(Obsdata, Prior, pol='I', **kwargs):
         raise Exception("NFFT doesn't work with odd image dimensions!")
 
     # unpack keyword args
-    # systematic_noise = kwargs.get('systematic_noise',0.) 
+    # systematic_noise = kwargs.get('systematic_noise',0.)
     maxset = kwargs.get('maxset', False)
     if maxset:
         count = 'max'

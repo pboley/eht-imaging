@@ -1699,7 +1699,7 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
             tint += list((cpdata.int_time,)*nobs)
             t1 += list((cpdata.station[0].sta_name,)*nobs)
             t2 += list((cpdata.station[1].sta_name,)*nobs)
-            t3 += list((cpdata.station[1].sta_name,)*nobs)
+            t3 += list((cpdata.station[2].sta_name,)*nobs)
             u1 += list(cpdata.u1coord / cpdata.wavelength.eff_wave[idx])
             v1 += list(cpdata.v1coord / cpdata.wavelength.eff_wave[idx])
             u2 += list(cpdata.u2coord / cpdata.wavelength.eff_wave[idx])
