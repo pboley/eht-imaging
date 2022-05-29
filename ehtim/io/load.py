@@ -1679,6 +1679,8 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
     obs.amp = obs.data
 
     # Load closure phase (t3phi) and bispectrum (t3amp)
+    time = []
+    tint = []
     t1 = []
     t2 = []
     t3 = []
@@ -1698,6 +1700,7 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
             nobs = idx.sum()
             # Follow convention from load_obs_oifits
             obstime = ttime.mktime((cpdata.timeobs+datetime.timedelta(days=1)).timetuple()) / 3600.0
+            time += list((obstime,)*nobs)
             tint += list((cpdata.int_time,)*nobs)
             t1 += list((cpdata.station[0].sta_name,)*nobs)
             t2 += list((cpdata.station[1].sta_name,)*nobs)
