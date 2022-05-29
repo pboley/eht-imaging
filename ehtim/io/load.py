@@ -1678,7 +1678,7 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
     obs = ehtim.obsdata.Obsdata(ra, dec, rf, bw, datatable, tarr, polrep='none', source=src)
     obs.amp = obs.data
 
-    # Load closure phase
+    # Load closure phase (t3phi) and bispectrum (t3amp)
     t1 = []
     t2 = []
     t3 = []
@@ -1690,6 +1690,8 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
     v3 = []
     cphase = []
     sigmacp = []
+    bispec = []
+    sigmab = []
     for cpdata in oidata.t3:
         if cpdata.target is oidata.target[target]:
             idx = ~cpdata.flag
@@ -1709,10 +1711,16 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
             v3 += list((cpdata.v1coord+cpdata.v2coord) / cpdata.wavelength.eff_wave[idx])
             cphase += list(cpdata.t3phi[idx])
             sigmacp += list(cpdata.t3phierr[idx])
+            bispec += list(cpdata.t3amp[idx])
+            sigmab += list(cpdata.t3amperr[idx])
 
     obs.cphase = np.array([(time[i], t1[i], t2[i], t3[i], u1[i], v1[i],
                             u2[i], v2[i], u3[i], v3[i], cphase[i],
                             sigmacp[i]) for i in range(len(cphase))], dtype=ehc.DTCPHASE)
+    obs.bispec = np.array([(time[i], t1[i], t2[i], t3[i], u1[i], v1[i],
+                            u2[i], v2[i], u3[i], v3[i], bispec[i],
+                            sigmab[i]) for i in range(len(bispec))], dtype=ehc.DTBIS)
+
 
     # return object
     return obs
