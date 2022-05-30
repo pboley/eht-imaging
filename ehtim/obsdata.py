@@ -502,6 +502,7 @@ class Obsdata(object):
                     data, lambda x: np.searchsorted(self.scans[:, 0], x['time'])):
                 datalist.append(np.array([obs for obs in group]))
 
+#        return np.array(datalist, dtype=object)
         return np.array(datalist)
 
     def split_obs(self, t_gather=0., scan_gather=False):
@@ -550,6 +551,7 @@ class Obsdata(object):
         for key, group in it.groupby(data[idx], lambda x: set((x['t1'], x['t2']))):
             datalist.append(np.array([obs for obs in group]))
 
+#        return np.array(datalist, dtype=object)
         return np.array(datalist)
 
     def unpack_bl(self, site1, site2, fields, ang_unit='deg', debias=False, timetype=False):
@@ -593,6 +595,7 @@ class Obsdata(object):
 
                     allout.append(out)
 
+#        return np.array(allout, dtype=object)
         return np.array(allout)
 
     def unpack(self, fields, mode='all', ang_unit='deg', debias=False, conj=False, timetype=False):
@@ -959,6 +962,7 @@ class Obsdata(object):
 
         # TODO -- should import this at top, but the circular dependencies create a mess...
         import ehtim.imaging.imager_utils as iu
+        import ehtim.modeling.modeling_utils as mu
 
         # Movie -- weighted sum of all frame chi^2 values
         if hasattr(im_or_mov, 'get_image'):
@@ -990,6 +994,11 @@ class Obsdata(object):
                 num_list.append(len(data))
 
             chisq = np.sum(np.array(num_list) * np.array(chisq_list)) / np.sum(num_list)
+
+        # Model -- single chi^2
+        elif hasattr(im_or_mov,'N_models'):            
+            (data, sigma, uv, jonesdict) = mu.chisqdata(self, dtype, pol, **kwargs)
+            chisq = mu.chisq(im_or_mov, uv, data, sigma, dtype, jonesdict)
 
         # Image -- single chi^2
         else:
@@ -2819,7 +2828,7 @@ class Obsdata(object):
                vtype (str): The visibilty type ('vis','qvis','uvis','vvis','pvis')
                             from which to assemble closure phases
                count (str): If 'min', return minimal set of phases,
-                            If 'min-cut0bl' return minimal set after flaggin zero-baselines
+                            If 'min-cut0bl' return minimal set after flagging zero-baselines
                ang_unit (str): If 'deg', return closure phases in degrees, else return in radians
                timetype (str): 'UTC' or 'GMST'
                uv_min (float): flag baselines shorter than this before forming closure quantities
@@ -2990,7 +2999,7 @@ class Obsdata(object):
             timetype = self.timetype
 
         if method=='from_maxset' and (vtype in ['lrvis','pvis','rlvis']):
-            print ("Warning! method='from_maxset' default in bispectra_tri() is inconsistent with vtype=%s" % vtype)
+            print ("Warning! method='from_maxset' default in bispectra_tri() inconsistent with vtype=%s" % vtype)
             print ("Switching to method='from_vis'")
             method = 'from_vis'
 
@@ -3849,7 +3858,7 @@ class Obsdata(object):
         return outdata
 
     def plotall(self, field1, field2,
-                conj=False, debias=True, tag_bl=False, ang_unit='deg', timetype=False,
+                conj=False, debias=False, tag_bl=False, ang_unit='deg', timetype=False,
                 axis=False, rangex=False, rangey=False, snrcut=0.,
                 color=ehc.SCOLORS[0], marker='o', markersize=ehc.MARKERSIZE, label=None,
                 grid=True, ebar=True, axislabels=True, legend=False,
@@ -4077,7 +4086,7 @@ class Obsdata(object):
         return x
 
     def plot_bl(self, site1, site2, field,
-                debias=True, ang_unit='deg', timetype=False,
+                debias=False, ang_unit='deg', timetype=False,
                 axis=False, rangex=False, rangey=False, snrcut=0.,
                 color=ehc.SCOLORS[0], marker='o', markersize=ehc.MARKERSIZE, label=None,
                 grid=True, ebar=True, axislabels=True, legend=False,
@@ -4488,20 +4497,38 @@ class Obsdata(object):
 
     def save_uvfits(self, fname, force_singlepol=False, polrep_out='circ'):
         """Save visibility data to uvfits file.
-
            Args:
-                fname (str): path to output text file
+                fname (str): path to output uvfits file.
                 force_singlepol (str): if 'R' or 'L', will interpret stokes I field as 'RR' or 'LL'
                 polrep_out (str): 'circ' or 'stokes': how data should be stored in the uvfits file
         """
 
         if (force_singlepol is not False) and (self.polrep != 'stokes'):
-            raise Exception("force_singlepol is incompatible with polrep!='stokes'")
+            raise Exception(
+                "force_singlepol is incompatible with polrep!='stokes'")
 
-        ehtim.io.save.save_obs_uvfits(self, fname,
-                                      force_singlepol=force_singlepol, polrep_out=polrep_out)
+        output = ehtim.io.save.save_obs_uvfits(self, fname,
+                                               force_singlepol=force_singlepol, polrep_out=polrep_out)
 
         return
+
+    def make_hdulist(self, force_singlepol=False, polrep_out='circ'):
+        """Returns an hdulist in the same format as in a saved .uvfits file.
+           Args:
+                force_singlepol (str): if 'R' or 'L', will interpret stokes I field as 'RR' or 'LL'
+                polrep_out (str): 'circ' or 'stokes': how data should be stored in the uvfits file
+           Returns:
+                hdulist (astropy.io.fits.HDUList)
+        """
+
+        if (force_singlepol is not False) and (self.polrep != 'stokes'):
+            raise Exception(
+                "force_singlepol is incompatible with polrep!='stokes'")
+
+        hdulist = ehtim.io.save.save_obs_uvfits(self, None,
+                                                force_singlepol=force_singlepol, polrep_out=polrep_out)
+        return hdulist
+
 
     def save_oifits(self, fname, flux=1.0):
         """ Save visibility data to oifits. Polarization data is NOT saved.
@@ -4617,7 +4644,7 @@ def load_uvfits(fname, flipbl=False, remove_nan=False, force_singlepol=None,
     """Load observation data from a uvfits file.
 
        Args:
-           fname (str): path to input text file
+           fname (str or HDUList): path to input text file or HDUList object
            flipbl (bool): flip baseline phases if True.
            remove_nan (bool): True to remove nans from missing polarizations
            polrep (str): load data as either 'stokes' or 'circ'
