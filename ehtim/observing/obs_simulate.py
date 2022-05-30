@@ -204,8 +204,11 @@ def sample_vis(im_org, uv, sgrscat=False, polrep_obs='stokes',
     elif polrep_obs == 'circ':
         im = im_org.switch_polrep('circ', 'RR')
         pollist = ['RR', 'LL', 'RL', 'LR']  # TODO what if we have to RR image?
+    elif polrep_obs == 'none':
+        im = im_org.switch_polrep('stokes', 'I')
+        pollist = ['I', 'I', 'I', 'I']
     else:
-        raise Exception("only 'stokes' and 'circ' are supported polreps!")
+        raise Exception("only 'stokes', 'circ' and 'none' are supported polreps!")
 
     uv = np.array(uv)
     if uv.shape[1] != 2:

@@ -1579,6 +1579,7 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
             tint += list((vis.int_time,)*nobs)
             t1 += list((vis.station[0].sta_name,)*nobs)
             t2 += list((vis.station[1].sta_name,)*nobs)
+            tau1 = tau2 = 0
             u += list(vis.ucoord / vis.wavelength.eff_wave[idx])
             v += list(vis.vcoord / vis.wavelength.eff_wave[idx])
             if usevis2:
@@ -1591,7 +1592,7 @@ def load_obs_oifits_new(filename, flux=1.0, target=0, usevis2=False):
             wavelength += list(vis.wavelength.eff_wave[idx])
             bandpass += list(vis.wavelength.eff_band[idx])
 
-    datatable = np.array([(time[i], tint[i], t1[i], t2[i], u[i], v[i], amp[i],
+    datatable = np.array([(time[i], tint[i], t1[i], t2[i], tau1, tau2, u[i], v[i], amp[i],
                            sigma[i]) for i in range(len(amp))], dtype=ehc.DTAMP)
 
     # get antenna info

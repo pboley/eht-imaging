@@ -91,6 +91,7 @@ DTPOL_CIRC = [('time', 'f8'), ('tint', 'f8'),
 
 DTAMP = [('time', 'f8'), ('tint', 'f8'),
          ('t1', 'U32'), ('t2', 'U32'),
+         ('tau1', 'f8'), ('tau2', 'f8'),
          ('u', 'f8'), ('v', 'f8'),
          ('amp', 'f8'), ('sigma', 'f8')]
 

@@ -2292,6 +2292,9 @@ class Image(object):
                 obsdata['rlvis'] = data[2]
                 obsdata['lrvis'] = data[3]
 
+        elif obs.polrep == 'none':
+            obsdata['amp'] = np.abs(data[0])
+
         obs_no_noise = ehtim.obsdata.Obsdata(self.ra, self.dec, obs.rf, obs.bw, obsdata, obs.tarr,
                                              source=self.source, mjd=self.mjd, polrep=obs.polrep,
                                              ampcal=True, phasecal=True, opacitycal=True,
@@ -2314,7 +2317,7 @@ class Image(object):
                      dterm_offset=ehc.DTERMPDEF,
                      rlratio_std=0., rlphase_std=0.,
                      sigmat=None, phasesigmat=None, rlgsigmat=None,rlpsigmat=None,
-                     caltable_path=None, seed=False, verbose=True):
+                     caltable_path=None, seed=False, verbose=True, add_noise=True):
         """Observe the image on the same baselines as an existing observation object and add noise.
 
            Args:
@@ -2376,9 +2379,16 @@ class Image(object):
         if seed:
             np.random.seed(seed=seed)
 
+        if obs_in.polrep == 'none':
+            add_noise = False
+            print('WARNING: No noise model for unpolarized observations')
+
         obs = self.observe_same_nonoise(obs_in, sgrscat=sgrscat,ttype=ttype,
                                         cache=False, fft_pad_factor=fft_pad_factor,
                                         zero_empty_pol=True, verbose=verbose)
+
+        if not add_noise:
+            return obs
 
         # Jones Matrix Corruption & Calibration
         if jones:
